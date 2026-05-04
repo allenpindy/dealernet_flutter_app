@@ -1,6 +1,7 @@
+
 import 'package:flutter/material.dart';
-//import 'package:dealernet_flutter_app/screens/reminder_screen.dart';
 import 'package:dealernet_flutter_app/data/session.dart';
+import 'package:dealernet_flutter_app/data/db.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,11 +11,24 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>(); // Form validation key [1](https://docs.flutter.dev/cookbook/forms/validation)
+  final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _hidePassword = true;
+  bool _dbReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize DB AFTER first frame so desktop UI renders immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await initDb();
+      if (!mounted) return;
+      setState(() => _dbReady = true);
+    });
+  }
 
   @override
   void dispose() {
@@ -23,27 +37,30 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
-    // Validate all fields in the form [1](https://docs.flutter.dev/cookbook/forms/validation)
+  Future<void> _submit() async {
+    if (!_dbReady) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Initializing database... please wait')),
+      );
+      return;
+    }
+
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
     final username = _usernameController.text.trim();
-    final password = _passwordController.text; // keep spaces if user typed them
+    final password = _passwordController.text;
 
-    // Prototype: This will eventually be wired to the database
-    final usernameOk = username == 'jqinstaller';
-    final passwordOk = password.trim().isNotEmpty;
+    final user = await appDb.authenticate(username, password);
 
-    if (usernameOk && passwordOk) {
-      // Replace login screen so user can't navigate back to it
-      Session.username = username;
+    if (!mounted) return;
+
+    if (user != null) {
+      Session.username = user.username;
       Navigator.of(context).pushReplacementNamed('/app');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid credentials. Try again.'),
-        ),
+        const SnackBar(content: Text('Invalid username or password')),
       );
     }
   }
@@ -51,14 +68,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('DealerNET Login')),
+      appBar: AppBar(title: const Text('dealerNET Login')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
-              key: _formKey, // [1](https://docs.flutter.dev/cookbook/forms/validation)
+              key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -73,23 +90,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Username is required.';
                       }
-                      if (value.trim() != 'jqinstaller') {
-                        return 'Invalid Username.';
-                      }
-
                       return null;
                     },
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: _hidePassword, // masked input
+                    obscureText: _hidePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
-                        onPressed: () => setState(() => _hidePassword = !_hidePassword),
-                        icon: Icon(_hidePassword ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () =>
+                            setState(() => _hidePassword = !_hidePassword),
+                        icon: Icon(
+                          _hidePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
                       ),
                     ),
                     onFieldSubmitted: (_) => _submit(),
@@ -100,7 +118,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -109,19 +126,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         minimumSize: const Size(0, 0),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                  
                       onPressed: _submit,
-
                       child: const Text('Forgot password?'),
                     ),
                   ),
-
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _submit,
-                      child: const Text('Submit'),
+                      onPressed: _dbReady ? _submit : null,
+                      child: _dbReady
+                          ? const Text('Submit')
+                          : const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
                     ),
                   ),
                 ],

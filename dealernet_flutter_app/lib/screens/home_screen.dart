@@ -4,18 +4,17 @@ import 'package:intl/intl.dart';
 import 'package:dealernet_flutter_app/data/db.dart';
 import 'package:dealernet_flutter_app/data/session.dart';
 
-import 'package:dealernet_flutter_app/screens/install_screen.dart';
 
 
 
 class HomeScreen extends StatelessWidget {
-  final VoidCallback onOpenInstall;
+  final void Function(int proposalId) onOpenInstall;
 
   const HomeScreen({super.key, required this.onOpenInstall});
 
   @override
   Widget _userWelcome() {
-    final username = Session.username ?? 'jqinstaller';
+    final username = Session.username ?? 'jqdealer';
 
     return FutureBuilder(
       future: appDb.getUserByUsername(username),
@@ -52,6 +51,7 @@ class HomeScreen extends StatelessWidget {
       },
     );
   }
+  @override
   Widget build(BuildContext context) {
     return Row(
       children: [
@@ -84,7 +84,7 @@ class HomeScreen extends StatelessWidget {
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         trailing: const Icon(Icons.chevron_right, size: 16),
-                        onTap: onOpenInstall,
+                        onTap: () => onOpenInstall(2),
                       ),
                       Text('12:00-12:30p (lunch)'),
                       Text('12:30-2:00p (Support)'),

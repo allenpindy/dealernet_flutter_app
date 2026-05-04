@@ -32,8 +32,8 @@ class _ReminderScreenState extends State<ReminderScreen> {
       title: const Text('Password reset'),
       content: _submitted
           ? const Text(
-              'If you have a DealerNET account, you will receive password reset instructions shortly.',
-            )
+              'If you have a dealerNET account, you will receive password reset instructions shortly.',
+            ) 
           : Form(
               key: _formKey,
               child: TextFormField(

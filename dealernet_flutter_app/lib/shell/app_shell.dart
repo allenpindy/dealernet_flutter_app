@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-
 import '../screens/home_screen.dart';
 import '../screens/walkthru_screen.dart';
 import '../screens/recommend_screen.dart';
 import '../screens/propose_screen.dart';
 import '../screens/updateinfo_screen.dart';
 import '../screens/install_screen.dart';
+import '../screens/arrive_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -17,8 +17,13 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   bool showInstall = false;
 
-  void _openInstall() {
-    setState(() => showInstall = true);
+  int selectedProposalId = 1; // ✅ tracks which job/proposal is active
+
+  void _openInstall(int proposalId) {
+    setState(() {
+      selectedProposalId = proposalId;
+      showInstall = true;
+    });
   }
 
   void _closeInstall() {
@@ -35,14 +40,15 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('DealerNET'),
+          title: const Text('dealerNET'),
           bottom: const TabBar(
             tabs: [
               Tab(icon: Icon(Icons.home), text: 'Home'),
-              Tab(text: 'Walk‑Thru'),
+              Tab(text: 'Arrive'),
+              Tab(text: 'Walk-Thru'),
               Tab(text: 'Recommend'),
               Tab(text: 'Propose'),
               Tab(icon: Icon(Icons.lock), text: 'Admin'),
@@ -59,14 +65,14 @@ class _AppShellState extends State<AppShell> {
           children: [
             TabBarView(
               children: [
-                HomeScreen(onOpenInstall: _openInstall),
+                HomeScreen(onOpenInstall: _openInstall), 
+                const ArriveScreen(),
                 const WalkthruScreen(),
                 const RecommendScreen(),
-                const ProposeScreen(),
+                ProposeScreen(proposalId: selectedProposalId),
                 const UpdateInfoScreen(),
               ],
             ),
-
             if (showInstall)
               Positioned.fill(
                 child: Material(

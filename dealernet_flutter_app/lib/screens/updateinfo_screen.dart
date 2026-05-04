@@ -11,7 +11,7 @@ class UpdateInfoScreen extends StatefulWidget {
 class _UpdateInfoScreenState extends State<UpdateInfoScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _usernameController = TextEditingController(text: 'jqinstaller');
+  final _usernameController = TextEditingController(text: 'jqdealer');
   final _fullNameController = TextEditingController();
   final _companyController = TextEditingController();
 

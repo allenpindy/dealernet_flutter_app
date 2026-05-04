@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:dealernet_flutter_app/data/db.dart';
 
-class InstallScreen extends StatelessWidget {
-  const InstallScreen({super.key});
+class ArriveScreen extends StatelessWidget {
+  const ArriveScreen({super.key});
 
   static const String _address = '638 Maple Ct, Brownsburg, IN 46112';
 
@@ -45,15 +46,31 @@ class InstallScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Prominent Get Directions button
+            // Get Directions button 
             ElevatedButton.icon(
-              icon: const Icon(Icons.directions),
-              label: const Text('Get Directions'),
+              icon: const Icon(Icons.punch_clock),
+              label: const Text('Mark Arrived'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 textStyle: const TextStyle(fontSize: 16),
               ),
-              onPressed: () => _launchGoogleMaps(context),
+              onPressed: () async {
+                final now = DateTime.now();
+
+                await appDb.markArrived(
+                  jobId: 'JOB-0001',
+                  arrivedAt: now,
+                  customerName: 'John Smith',
+                  address: _address,
+                );
+
+                if (!context.mounted) return;
+
+                final timeStr = TimeOfDay.fromDateTime(now).format(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Arrival recorded at $timeStr')),
+                );
+              },
             ),
 
             const SizedBox(height: 16),
